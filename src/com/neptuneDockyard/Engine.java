@@ -34,6 +34,10 @@ import com.threed.jpct.util.Light;
 import com.threed.jpct.util.ShadowHelper;
 import com.threed.jpct.util.SkyBox;
 
+import com.bulletphysics.collision.*;
+import com.bulletphysics.dynamics.*;
+import com.bulletphysics.util.*;
+
 public class Engine {
 
 	public Logger logger = new Logger();
@@ -239,18 +243,20 @@ public class Engine {
 			// TODO add trucks
 
 			// TODO load surface
-			testPlane = Primitives.getPlane(32, 32);
+//			testPlane = Primitives.getPlane(32, 32);
+			testPlane = Primitives.getSphere(70);
 			testPlane.rotateX((float) (Math.PI / 2f));
 			testPlane.setSpecularLighting(true);
 			testPlane.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS|Object3D.COLLISION_CHECK_SELF);
 			testPlane.enableCollisionListeners();
 			testPlane.setTexture("sandTex");
 			testPlane.compileAndStrip();
-			Mesh planeMesh = testPlane.getMesh();
-			planeMesh.setVertexController(new Mod(), false);
-			planeMesh.applyVertexController();
-			planeMesh.removeVertexController();
+//			Mesh planeMesh = testPlane.getMesh();
+//			planeMesh.setVertexController(new Mod(), false);
+//			planeMesh.applyVertexController();
+//			planeMesh.removeVertexController();
 			testPlane.translate(100, 100, 100);
+//			testPlane.translate(0, 100, 0);
 			testPlane.setName("testPlane");
 			theWorld.addObject(testPlane);
 
@@ -469,8 +475,8 @@ public class Engine {
 		
 		//check camera collisions, this makes the camera fall
 		if(!ufo)
-//			theWorld.checkCameraCollisionEllipsoid(Camera.CAMERA_MOVEDOWN, new SimpleVector(1,1,5), 1, 1);
-			theWorld.checkCameraCollisionEllipsoid(new SimpleVector(0,1,0), new SimpleVector(1,1,5), 2, 1);
+			theWorld.checkCameraCollisionEllipsoid(testPlane.getTransformedCenter().normalize(), new SimpleVector(1,1,5), 2, 1);
+//			theWorld.checkCameraCollisionEllipsoid(new SimpleVector(0,1,0), new SimpleVector(1,1,5), 2, 1);
 		
 	}
 
@@ -482,9 +488,11 @@ public class Engine {
 		SimpleVector t = new SimpleVector(0,0.1,0);
 		SimpleVector s = new SimpleVector(0,0.1,0);
 		SimpleVector p = new SimpleVector(0,0.1,0);
-		t = theWorld.getObjectByName("playerShip").checkForCollisionEllipsoid(t, new SimpleVector(2,3,1), 1);
+		t = theWorld.getObjectByName("playerShip").checkForCollisionEllipsoid(t, testPlane.getTransformedCenter().normalize(), 1);
+//		t = theWorld.getObjectByName("playerShip").checkForCollisionEllipsoid(t, new SimpleVector(2,3,1), 1);
 		theWorld.getObjectByName("playerShip").translate(t);
-		s = theWorld.getObjectByName("truck").checkForCollisionEllipsoid(s, new SimpleVector(2,3,5), 1);
+//		s = theWorld.getObjectByName("truck").checkForCollisionEllipsoid(s, new SimpleVector(2,3,5), 1);
+		s = theWorld.getObjectByName("truck").checkForCollisionEllipsoid(s, testPlane.getTransformedCenter().normalize(), 1);
 		theWorld.getObjectByName("truck").translate(s);
 //		p = theWorld.getObjectByName("ac130").checkForCollisionEllipsoid(p, new SimpleVector(8,4,3), 1);
 //		theWorld.getObjectByName("ac130").translate(p);
