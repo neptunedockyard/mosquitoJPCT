@@ -34,9 +34,9 @@ import com.threed.jpct.util.Light;
 import com.threed.jpct.util.ShadowHelper;
 import com.threed.jpct.util.SkyBox;
 
-import com.bulletphysics.collision.*;
-import com.bulletphysics.dynamics.*;
-import com.bulletphysics.util.*;
+//import com.bulletphysics.collision.*;
+//import com.bulletphysics.dynamics.*;
+//import com.bulletphysics.util.*;
 
 public class Engine {
 
@@ -131,7 +131,7 @@ public class Engine {
 		Config.glVerbose = true;
 		Config.glAvoidTextureCopies = true;
 		Config.maxPolysVisible = 1000;
-		Config.glColorDepth = 24;
+		Config.glColorDepth = 32;
 		Config.glFullscreen = false;
 		Config.farPlane = 4000;
 		Config.glShadowZBias = 0.8f;
@@ -181,8 +181,8 @@ public class Engine {
 			TextureManager.getInstance().addTexture("sandTex", new Texture("assets/textures/sf-01.jpg"));
 			Texture truckTex = null;
 			TextureManager.getInstance().addTexture("truckTex", new Texture("assets/textures/veh_kama.png"));
-			Texture ac130Tex = null;
-			TextureManager.getInstance().addTexture("ac130Tex", new Texture("assets/models/spooky/grey.png"));
+//			Texture ac130Tex = null;
+//			TextureManager.getInstance().addTexture("ac130Tex", new Texture("assets/models/spooky/grey.png"));
 
 			Logger.log("finished loading textures");
 		} catch (Exception ex) {
