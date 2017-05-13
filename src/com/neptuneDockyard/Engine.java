@@ -152,7 +152,7 @@ public class Engine {
 		theWorld.getLights().setOverbrightLighting(
 				Lights.OVERBRIGHT_LIGHTING_DISABLED);
 		theWorld.getLights().setRGBScale(Lights.RGB_SCALE_2X);
-//		theWorld.setAmbientLight(255, 204, 185);
+		theWorld.setAmbientLight(255, 204, 185);
 		testLight = new Light(theWorld);
 		testLight.setPosition(new SimpleVector(100, 100, 100));
 		testLight.setIntensity(140, 120, 120);
@@ -165,7 +165,7 @@ public class Engine {
 
 		// add fog
 
-//		theWorld.setFogging(World.FOGGING_ENABLED);
+		theWorld.setFogging(World.FOGGING_ENABLED);
 		theWorld.setFoggingMode(World.FOGGING_PER_PIXEL);
 		theWorld.setFogParameters(400, 255, 49, 10);
 
@@ -261,16 +261,17 @@ public class Engine {
 			theWorld.addObject(testPlane);
 
 			// load shadows and projector
-			projector = new Projector();
-			projector.setFOV(1.5f);
-			projector.setYFOV(1.5f);
-			sh = new ShadowHelper(theWorld, buffer, projector, 2048);
-			sh.setCullingMode(false);
-//			 sh.setAmbientLight(new Color(30, 30, 30));
-			sh.setLightMode(true);
-			sh.setBorder(1);
-			sh.addCaster(playerShip);
-			sh.addReceiver(testPlane);
+			//TODO throws errors
+//			projector = new Projector();
+//			projector.setFOV(1.5f);
+//			projector.setYFOV(1.5f);
+//			sh = new ShadowHelper(theWorld, buffer, projector, 2048);
+//			sh.setCullingMode(false);
+////			 sh.setAmbientLight(new Color(30, 30, 30));
+//			sh.setLightMode(true);
+//			sh.setBorder(1);
+//			sh.addCaster(playerShip);
+//			sh.addReceiver(testPlane);
 
 			Loader.clearCache();
 			Logger.log("finished loading models");
@@ -294,7 +295,7 @@ public class Engine {
 
 		// add skybox
 		// TODO figure out skybox issue
-		skyBox = new SkyBox(/*"starTex", "starTex", "starTex", "starTex", "starTex", "starTex",*/ 1000f);
+		skyBox = new SkyBox("starTex", "starTex", "starTex", "starTex", "starTex", "starTex", 1000f);
 		skyBox.compile();
 
 		// add camera
@@ -309,9 +310,12 @@ public class Engine {
 
 		Logger.log("adding framebuffer");
 		buffer = new FrameBuffer(width, height, FrameBuffer.SAMPLINGMODE_NORMAL);
+		System.out.println("1");
 		buffer.disableRenderer(IRenderer.RENDERER_SOFTWARE);
+		System.out.println("2");
 		buffer.enableRenderer(IRenderer.RENDERER_OPENGL);
-
+		System.out.println("3");
+		
 		// now go to game loop
 		theWorld.buildAllObjects();
 	}
@@ -326,7 +330,7 @@ public class Engine {
 	public void run() {
 		Logger.log("Engine running");
 
-		// oggStream.playAsMusic(1.0f, 1.0f, true);
+		oggStream.playAsMusic(1.0f, 1.0f, true);
 		gameLoop();
 	}
 
@@ -335,7 +339,7 @@ public class Engine {
 
 		mouseMap.cameraUpdate();
 		updatePosition();
-		getCollisions();
+//		getCollisions();
 
 		while ((state = keyMap.poll()) != KeyState.NONE) {
 
@@ -426,6 +430,7 @@ public class Engine {
 		while (!org.lwjgl.opengl.Display.isCloseRequested()) {
 			update();
 			buffer.clear(java.awt.Color.BLACK);
+			buffer.setPaintListenerState(false);
 
 			// render skybox
 			skyBox.render(theWorld, buffer);
@@ -433,6 +438,7 @@ public class Engine {
 			theWorld.renderScene(buffer);
 			theWorld.drawWireframe(buffer, java.awt.Color.BLACK);
 			theWorld.draw(buffer);
+			buffer.setPaintListenerState(true);
 			buffer.update();
 			buffer.displayGLOnly();
 			// try {
