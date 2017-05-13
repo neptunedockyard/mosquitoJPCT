@@ -13,6 +13,8 @@ import org.newdawn.slick.openal.SoundStore;
 import org.newdawn.slick.util.ResourceLoader;
 
 import com.threed.jpct.Camera;
+import com.threed.jpct.CollisionEvent;
+import com.threed.jpct.CollisionListener;
 import com.threed.jpct.Config;
 import com.threed.jpct.FrameBuffer;
 import com.threed.jpct.IRenderer;
@@ -33,10 +35,6 @@ import com.threed.jpct.util.KeyState;
 import com.threed.jpct.util.Light;
 import com.threed.jpct.util.ShadowHelper;
 import com.threed.jpct.util.SkyBox;
-
-//import com.bulletphysics.collision.*;
-//import com.bulletphysics.dynamics.*;
-//import com.bulletphysics.util.*;
 
 public class Engine {
 
@@ -65,13 +63,16 @@ public class Engine {
 	private Object3D mi8 = null;
 	private Object3D car = null;
 
-
 	private FrameBuffer buffer = null;
 	private World theWorld = null;
 	private TextureManager texMan = null;
 	private Camera camera = null;
 	private SkyBox skyBox = null;
 	private Object3D skyDome = null;
+	
+	// collision listeners
+	
+	private CollisionListener planetListener = null;
 
 	// TODO remove test object
 	private Object3D testPlane = null;
@@ -90,8 +91,8 @@ public class Engine {
 
 	// framebuffer size
 
-	private int width = 800;
-	private int height = 600;
+	private int width = 1366;
+	private int height = 768;
 
 	// key flags
 
@@ -132,7 +133,7 @@ public class Engine {
 		Config.glAvoidTextureCopies = true;
 		Config.maxPolysVisible = 1000;
 		Config.glColorDepth = 32;
-		Config.glFullscreen = false;
+		Config.glFullscreen = true;
 		Config.farPlane = 4000;
 		Config.glShadowZBias = 0.8f;
 		Config.lightMul = 1;
@@ -152,7 +153,7 @@ public class Engine {
 		theWorld.getLights().setOverbrightLighting(
 				Lights.OVERBRIGHT_LIGHTING_DISABLED);
 		theWorld.getLights().setRGBScale(Lights.RGB_SCALE_2X);
-		theWorld.setAmbientLight(255, 204, 185);
+//		theWorld.setAmbientLight(255, 204, 185);
 		testLight = new Light(theWorld);
 		testLight.setPosition(new SimpleVector(100, 100, 100));
 		testLight.setIntensity(140, 120, 120);
@@ -167,7 +168,7 @@ public class Engine {
 
 		theWorld.setFogging(World.FOGGING_ENABLED);
 		theWorld.setFoggingMode(World.FOGGING_PER_PIXEL);
-		theWorld.setFogParameters(400, 255, 49, 10);
+		theWorld.setFogParameters(400, 30, 30, 30);
 
 		// add textures
 
@@ -181,9 +182,6 @@ public class Engine {
 			TextureManager.getInstance().addTexture("sandTex", new Texture("assets/textures/sf-01.jpg"));
 			Texture truckTex = null;
 			TextureManager.getInstance().addTexture("truckTex", new Texture("assets/textures/veh_kama.png"));
-//			Texture ac130Tex = null;
-//			TextureManager.getInstance().addTexture("ac130Tex", new Texture("assets/models/spooky/grey.png"));
-
 			Logger.log("finished loading textures");
 		} catch (Exception ex) {
 			Logger.log("error: textures not loaded");
@@ -201,9 +199,8 @@ public class Engine {
 			playerShip.rotateMesh();
 
 			playerShip.setTexture("fighterTex");
-			// playerShip.setEnvmapped(Object3D.ENVMAP_ENABLED); //this causes
-			// texture to get all messed up
-			playerShip.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS|Object3D.COLLISION_CHECK_SELF);
+			// playerShip.setEnvmapped(Object3D.ENVMAP_ENABLED); //this causes texture to get all messed up
+			playerShip.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS);
 			playerShip.enableCollisionListeners();
 			playerShip.calcNormals();
 			playerShip.build();
@@ -217,7 +214,7 @@ public class Engine {
 //			truck.setEnvmapped(Object3D.ENVMAP_ENABLED);
 			truck.rotateX((float) (-Math.PI / 1f));
 			truck.translate(0, 50f, 0);
-			truck.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS|Object3D.COLLISION_CHECK_SELF);
+			truck.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS);
 			truck.enableCollisionListeners();
 			truck.calcNormals();
 			truck.calcBoundingBox();
@@ -231,7 +228,7 @@ public class Engine {
 //			btr.setTexture("ac130Tex");
 			btr.translate(200f, 0, 0);
 			btr.rotateX((float) (-Math.PI / 1f));
-			btr.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS|Object3D.COLLISION_CHECK_SELF);
+			btr.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS);
 			btr.enableCollisionListeners();
 			btr.calcNormals();
 			btr.calcBoundingBox();
@@ -244,11 +241,13 @@ public class Engine {
 
 			// TODO load surface
 //			testPlane = Primitives.getPlane(32, 32);
-			testPlane = Primitives.getSphere(70);
+			testPlane = Primitives.getSphere(64, 70);
+//			testPlane = Primitives.getCube(70);
 			testPlane.rotateX((float) (Math.PI / 2f));
 			testPlane.setSpecularLighting(true);
-			testPlane.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS|Object3D.COLLISION_CHECK_SELF);
+			testPlane.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS);
 			testPlane.enableCollisionListeners();
+			testPlane.setCollisionOptimization(true);
 			testPlane.setTexture("sandTex");
 			testPlane.compileAndStrip();
 //			Mesh planeMesh = testPlane.getMesh();
@@ -259,6 +258,7 @@ public class Engine {
 //			testPlane.translate(0, 100, 0);
 			testPlane.setName("testPlane");
 			theWorld.addObject(testPlane);
+//			testPlane.addCollisionListener(planetListener);
 
 			// load shadows and projector
 			//TODO throws errors
@@ -295,14 +295,14 @@ public class Engine {
 
 		// add skybox
 		// TODO figure out skybox issue
-		skyBox = new SkyBox("starTex", "starTex", "starTex", "starTex", "starTex", "starTex", 1000f);
+		skyBox = new SkyBox(/*"starTex", "starTex", "starTex", "starTex", "starTex", "starTex",*/ 1000f);
 		skyBox.compile();
 
 		// add camera
 
 		Logger.log("adding camera, setting position");
 		camera = theWorld.getCamera();
-		camera.setFOV(80);
+		camera.setFOV(60);
 		camera.setPosition(50, -50, -5);
 		camera.lookAt(playerShip.getTransformedCenter());
 
@@ -310,11 +310,8 @@ public class Engine {
 
 		Logger.log("adding framebuffer");
 		buffer = new FrameBuffer(width, height, FrameBuffer.SAMPLINGMODE_NORMAL);
-		System.out.println("1");
 		buffer.disableRenderer(IRenderer.RENDERER_SOFTWARE);
-		System.out.println("2");
 		buffer.enableRenderer(IRenderer.RENDERER_OPENGL);
-		System.out.println("3");
 		
 		// now go to game loop
 		theWorld.buildAllObjects();
@@ -339,7 +336,7 @@ public class Engine {
 
 		mouseMap.cameraUpdate();
 		updatePosition();
-//		getCollisions();
+		getCollisions();
 
 		while ((state = keyMap.poll()) != KeyState.NONE) {
 
@@ -481,7 +478,13 @@ public class Engine {
 		
 		//check camera collisions, this makes the camera fall
 		if(!ufo)
-			theWorld.checkCameraCollisionEllipsoid(testPlane.getTransformedCenter().normalize(), new SimpleVector(1,1,5), 2, 1);
+//			theWorld.checkCameraCollisionEllipsoid(testPlane.getTransformedCenter().normalize(), new SimpleVector(1,1,5), 2, 1);
+			if (theWorld.checkCameraCollisionEllipsoid(testPlane.getTransformedCenter().normalize(), new SimpleVector(1,1,5), 1, 1)) {
+				CollisionEvent ce = null;
+//				Object3D ob = ce.getObject();
+//				planetListener.collision(ce);
+//				camera.align(ce.getSource());
+			}
 //			theWorld.checkCameraCollisionEllipsoid(new SimpleVector(0,1,0), new SimpleVector(1,1,5), 2, 1);
 		
 	}
@@ -491,16 +494,13 @@ public class Engine {
 		// disable directional movement
 		
 		//apply gravity
-		SimpleVector t = new SimpleVector(0,0.1,0);
-		SimpleVector s = new SimpleVector(0,0.1,0);
-		SimpleVector p = new SimpleVector(0,0.1,0);
-		t = theWorld.getObjectByName("playerShip").checkForCollisionEllipsoid(t, testPlane.getTransformedCenter().normalize(), 1);
-//		t = theWorld.getObjectByName("playerShip").checkForCollisionEllipsoid(t, new SimpleVector(2,3,1), 1);
-		theWorld.getObjectByName("playerShip").translate(t);
-//		s = theWorld.getObjectByName("truck").checkForCollisionEllipsoid(s, new SimpleVector(2,3,5), 1);
-		s = theWorld.getObjectByName("truck").checkForCollisionEllipsoid(s, testPlane.getTransformedCenter().normalize(), 1);
-		theWorld.getObjectByName("truck").translate(s);
-//		p = theWorld.getObjectByName("ac130").checkForCollisionEllipsoid(p, new SimpleVector(8,4,3), 1);
-//		theWorld.getObjectByName("ac130").translate(p);
+		SimpleVector t = new SimpleVector(0,0,0);
+		SimpleVector s = new SimpleVector(0,0,0);
+		t = testPlane.getTransformedCenter().normalize();
+		s = testPlane.getTransformedCenter().normalize();
+//		t = theWorld.getObjectByName("playerShip").checkForCollisionEllipsoid(t, testPlane.getTransformedCenter().normalize(), 1);
+//		theWorld.getObjectByName("playerShip").translate(t);
+//		s = theWorld.getObjectByName("truck").checkForCollisionEllipsoid(s, testPlane.getTransformedCenter().normalize(), 1);
+//		theWorld.getObjectByName("truck").translate(s);
 	}
 }

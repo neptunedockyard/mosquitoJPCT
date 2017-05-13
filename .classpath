@@ -2,16 +2,26 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/lib/jpct/jpct.jar"/>
-	<classpathentry kind="lib" path="lib/lib/lwjgl-2.9.1/jar/jinput.jar"/>
-	<classpathentry kind="lib" path="lib/lib/slick2d/lib/jogg-0.0.7.jar"/>
-	<classpathentry kind="lib" path="lib/lib/slick2d/lib/jorbis-0.0.15.jar"/>
-	<classpathentry kind="lib" path="lib/lib/slick2d/lib/natives-windows.jar"/>
-	<classpathentry kind="lib" path="lib/lib/slick2d/lib/slick.jar"/>
-	<classpathentry kind="lib" path="lib/lib/slick2d/lib/lwjgl_util.jar"/>
-	<classpathentry kind="lib" path="lib/lib/slick2d/lib/lwjgl.jar">
+	<classpathentry kind="lib" path="lib/jbullet/jbullet.jar">
 		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="mosquitoJPCT/lib/lib/slick2d"/>
+			<attribute name="javadoc_location" value="jar:platform:/resource/mosquitoJPCT/lib/doc/jbullet_javadoc.zip!/javadoc"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/slick2d/jinput.jar"/>
+	<classpathentry kind="lib" path="lib/slick2d/jogg-0.0.7.jar"/>
+	<classpathentry kind="lib" path="lib/slick2d/jorbis-0.0.15.jar"/>
+	<classpathentry kind="lib" path="lib/slick2d/lwjgl_util.jar"/>
+	<classpathentry kind="lib" path="lib/slick2d/lwjgl.jar"/>
+	<classpathentry kind="lib" path="lib/slick2d/natives-linux.jar"/>
+	<classpathentry kind="lib" path="lib/slick2d/natives-windows.jar"/>
+	<classpathentry kind="lib" path="lib/slick2d/slick.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/mosquitoJPCT/lib/doc/slick2d_javadoc.zip!/javadoc"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/jpct/jpct.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/mosquitoJPCT/lib/doc/jpct_javadoc.zip!/javadoc"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
