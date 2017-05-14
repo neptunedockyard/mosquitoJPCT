@@ -7,6 +7,7 @@ import java.awt.Color;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.openal.AL;
+import org.lwjgl.opengl.Display;
 import org.newdawn.slick.openal.Audio;
 import org.newdawn.slick.openal.AudioLoader;
 import org.newdawn.slick.openal.SoundStore;
@@ -98,6 +99,8 @@ public class Engine {
 		gameConfig.setFly(true);
 		gameConfig.setPlayMusic(false);
 		gameConfig.setFullscreen(true);
+		gameConfig.setWidth(Display.getDisplayMode().getWidth());
+		gameConfig.setHeight(Display.getDisplayMode().getHeight());
 
 		// set up mouse
 
@@ -108,7 +111,7 @@ public class Engine {
 		theWorld.getLights().setOverbrightLighting(Lights.OVERBRIGHT_LIGHTING_ENABLED);
 		theWorld.getLights().setRGBScale(Lights.RGB_SCALE_2X);
 		testLight = new Light(theWorld);
-		testLight.setPosition(new SimpleVector(100, 1, 0));
+		testLight.setPosition(new SimpleVector(150, 150, 0));
 		testLight.setIntensity(0, 255, 255);
 		testLight.setAttenuation(-1);
 		
