@@ -15,10 +15,9 @@ import com.threed.jpct.Logger;
 public class InputMapper {
 	// controllers for inputs
 	
+	private KeyMapper keyMap;
+	private KeyState state;
 	private Logger logger;
-	private KeyMapper keyMap = null;
-	private KeyState state = null;
-	
 	// camera
 	
 	private Camera camera = null;
@@ -34,8 +33,9 @@ public class InputMapper {
 	private boolean zoomLock = false;
 	private boolean sprint = false;
 	private float camSpeed = (float) 0.1;
+	
 
-	public InputMapper(Logger logger, KeyMapper keyMap, Camera camera) {
+	public InputMapper(KeyMapper keyMap, Camera camera, Logger logger, GameConfig game_config) {
 		// TODO Auto-generated constructor stub
 		this.keyMap = keyMap;
 		this.camera = camera;

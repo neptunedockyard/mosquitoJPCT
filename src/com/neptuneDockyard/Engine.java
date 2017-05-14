@@ -45,6 +45,7 @@ public class Engine {
 	private KeyMapper keyMap = null;
 	private MouseMapper mouseMap = null;
 	private KeyState state = null;
+	private InputMapper inMap = null;
 
 	// private controllers
 
@@ -69,6 +70,10 @@ public class Engine {
 	private Camera camera = null;
 	private SkyBox skyBox = null;
 	private Object3D skyDome = null;
+	
+	// game configuration
+	
+	private GameConfig gameConfig = null;
 	
 	// collision listeners
 	
@@ -105,7 +110,6 @@ public class Engine {
 	private boolean zoomLock = false;
 	private boolean sprint = false;
 	private float camSpeed = (float) 0.1;
-	private boolean ufo = false;				//false to enable gravity
 
 	// audio and music
 
@@ -140,6 +144,11 @@ public class Engine {
 		Config.collideOffset = 500;
 		Config.glTrilinear = true;
 		Config.glWindowName = "Mosquito JPCT";
+		
+		// set up game configuration
+		
+		gameConfig = new GameConfig();
+		gameConfig.set_fly(true);
 
 		// set up mouse
 
@@ -153,9 +162,8 @@ public class Engine {
 		theWorld.getLights().setOverbrightLighting(
 				Lights.OVERBRIGHT_LIGHTING_DISABLED);
 		theWorld.getLights().setRGBScale(Lights.RGB_SCALE_2X);
-//		theWorld.setAmbientLight(255, 204, 185);
 		testLight = new Light(theWorld);
-		testLight.setPosition(new SimpleVector(100, 100, 100));
+		testLight.setPosition(new SimpleVector(10, 10, 10));
 		testLight.setIntensity(140, 120, 120);
 		testLight.setAttenuation(-1);
 		
@@ -250,10 +258,12 @@ public class Engine {
 			testPlane.setCollisionOptimization(true);
 			testPlane.setTexture("sandTex");
 			testPlane.compileAndStrip();
-//			Mesh planeMesh = testPlane.getMesh();
-//			planeMesh.setVertexController(new Mod(), false);
-//			planeMesh.applyVertexController();
-//			planeMesh.removeVertexController();
+			
+			Mesh planeMesh = testPlane.getMesh();
+			planeMesh.setVertexController(new Mod(), false);
+			planeMesh.applyVertexController();
+			planeMesh.removeVertexController();
+			
 			testPlane.translate(100, 100, 100);
 //			testPlane.translate(0, 100, 0);
 			testPlane.setName("testPlane");
@@ -262,16 +272,16 @@ public class Engine {
 
 			// load shadows and projector
 			//TODO throws errors
-//			projector = new Projector();
-//			projector.setFOV(1.5f);
-//			projector.setYFOV(1.5f);
-//			sh = new ShadowHelper(theWorld, buffer, projector, 2048);
-//			sh.setCullingMode(false);
-////			 sh.setAmbientLight(new Color(30, 30, 30));
-//			sh.setLightMode(true);
-//			sh.setBorder(1);
-//			sh.addCaster(playerShip);
-//			sh.addReceiver(testPlane);
+			projector = new Projector();
+			projector.setFOV(1.5f);
+			projector.setYFOV(1.5f);
+			sh = new ShadowHelper(theWorld, buffer, projector, 2048);
+			sh.setCullingMode(false);
+//			 sh.setAmbientLight(new Color(30, 30, 30));
+			sh.setLightMode(true);
+			sh.setBorder(1);
+			sh.addCaster(testPlane);
+			sh.addReceiver(playerShip);
 
 			Loader.clearCache();
 			Logger.log("finished loading models");
@@ -320,8 +330,10 @@ public class Engine {
 	public void init() {
 		Logger.log("Engine init");
 
+		gameConfig = new GameConfig();
 		keyMap = new KeyMapper();
 		mouseMap = new MouseMapper(camera, playerShip);
+		inMap = new InputMapper(keyMap, camera, logger, gameConfig);
 	}
 
 	public void run() {
@@ -335,89 +347,11 @@ public class Engine {
 		SoundStore.get().poll(0);
 
 		mouseMap.cameraUpdate();
-		updatePosition();
+//		updatePosition();
 		getCollisions();
 
-		while ((state = keyMap.poll()) != KeyState.NONE) {
-
-			if (state.getKeyCode() == KeyEvent.VK_A
-					&& state.getState() == KeyState.PRESSED) {
-				left = state.getState();
-				Logger.log("key pressed: a " + camera.getPosition().toString());
-			} else if (state.getKeyCode() == KeyEvent.VK_A
-					&& state.getState() == KeyState.RELEASED) {
-				left = false;
-				Logger.log("key released: a " + camera.getPosition().toString());
-			}
-			if (state.getKeyCode() == KeyEvent.VK_D
-					&& state.getState() == KeyState.PRESSED) {
-				right = state.getState();
-				Logger.log("key pressed: d " + camera.getPosition().toString());
-			} else if (state.getKeyCode() == KeyEvent.VK_D
-					&& state.getState() == KeyState.RELEASED) {
-				right = false;
-				Logger.log("key released: d " + camera.getPosition().toString());
-			}
-			if (state.getKeyCode() == KeyEvent.VK_SPACE
-					&& state.getState() == KeyState.PRESSED) {
-				up = state.getState();
-				Logger.log("key pressed: space "
-						+ camera.getPosition().toString());
-			} else if (state.getKeyCode() == KeyEvent.VK_SPACE
-					&& state.getState() == KeyState.RELEASED) {
-				up = false;
-				Logger.log("key released: space "
-						+ camera.getPosition().toString());
-			}
-			if (state.getKeyCode() == KeyEvent.VK_Z
-					&& state.getState() == KeyState.PRESSED) {
-				down = state.getState();
-				Logger.log("key pressed: z " + camera.getPosition().toString());
-			} else if (state.getKeyCode() == KeyEvent.VK_Z
-					&& state.getState() == KeyState.RELEASED) {
-				down = false;
-				Logger.log("key released: z " + camera.getPosition().toString());
-			}
-			if (state.getKeyCode() == KeyEvent.VK_W
-					&& state.getState() == KeyState.PRESSED) {
-				forward = state.getState();
-				Logger.log("key pressed: w " + camera.getPosition().toString());
-			} else if (state.getKeyCode() == KeyEvent.VK_W
-					&& state.getState() == KeyState.RELEASED) {
-				forward = false;
-				Logger.log("key released: w " + camera.getPosition().toString());
-			}
-			if (state.getKeyCode() == KeyEvent.VK_S
-					&& state.getState() == KeyState.PRESSED) {
-				back = state.getState();
-				Logger.log("key pressed: s " + camera.getPosition().toString());
-			} else if (state.getKeyCode() == KeyEvent.VK_S
-					&& state.getState() == KeyState.RELEASED) {
-				back = false;
-				Logger.log("key released: s " + camera.getPosition().toString());
-			}
-			if (state.getKeyCode() == KeyEvent.VK_SHIFT
-					&& state.getState() == KeyState.PRESSED) {
-				sprint = state.getState();
-				Logger.log("key pressed: shift "
-						+ camera.getPosition().toString());
-			} else if (state.getKeyCode() == KeyEvent.VK_SHIFT
-					&& state.getState() == KeyState.RELEASED) {
-				sprint = false;
-				Logger.log("key released: shift "
-						+ camera.getPosition().toString());
-			}
-
-			// lock in camera
-			if (state.getState() == KeyState.PRESSED
-					&& state.getKeyCode() == KeyEvent.VK_L)
-				zoomLock ^= true;
-
-			// exit game
-			if (state.getState() == KeyState.PRESSED
-					&& state.getKeyCode() == KeyEvent.VK_ESCAPE)
-				gameShutdown();
-		}
+		inMap.update();
+		inMap.updatePosition();
 
 	}
 
@@ -438,11 +372,6 @@ public class Engine {
 			buffer.setPaintListenerState(true);
 			buffer.update();
 			buffer.displayGLOnly();
-			// try {
-			// Thread.sleep(10);
-			// } catch (InterruptedException e) {
-			// e.printStackTrace();
-			// }
 		}
 
 		gameShutdown();
@@ -477,16 +406,15 @@ public class Engine {
 			camera.moveCamera(Camera.CAMERA_MOVEOUT, camSpeed);
 		
 		//check camera collisions, this makes the camera fall
-		if(!ufo)
+//		if(!ufo)
 //			theWorld.checkCameraCollisionEllipsoid(testPlane.getTransformedCenter().normalize(), new SimpleVector(1,1,5), 2, 1);
-			if (theWorld.checkCameraCollisionEllipsoid(testPlane.getTransformedCenter().normalize(), new SimpleVector(1,1,5), 1, 1)) {
-				CollisionEvent ce = null;
+//			if (theWorld.checkCameraCollisionEllipsoid(testPlane.getTransformedCenter().normalize(), new SimpleVector(1,1,5), 1, 1)) {
+//				CollisionEvent ce = null;
 //				Object3D ob = ce.getObject();
 //				planetListener.collision(ce);
 //				camera.align(ce.getSource());
-			}
+//			}
 //			theWorld.checkCameraCollisionEllipsoid(new SimpleVector(0,1,0), new SimpleVector(1,1,5), 2, 1);
-		
 	}
 
 	public void getCollisions() {
