@@ -11,16 +11,20 @@ import com.threed.jpct.SimpleVector;
 import com.threed.jpct.util.KeyMapper;
 import com.threed.jpct.util.KeyState;
 import com.threed.jpct.Logger;
+import com.threed.jpct.Matrix;
 
 public class InputMapper {
 	// controllers for inputs
 	
+	private MouseMapper mouseMap;
 	private KeyMapper keyMap;
 	private KeyState state;
 	private Logger logger;
+	
 	// camera
 	
-	private Camera camera = null;
+	private Camera camera;
+	private Player player;
 	
 	// key flags
 
@@ -33,13 +37,24 @@ public class InputMapper {
 	private boolean zoomLock = false;
 	private boolean sprint = false;
 	private float camSpeed = (float) 0.1;
+	private boolean rotateCCW = false;
+	private boolean rotateCW = false;
+	private boolean upReset = false;
 	
-
-	public InputMapper(KeyMapper keyMap, Camera camera, Logger logger, GameConfig game_config) {
+	// camera default orientation
+	
+	private SimpleVector upStart;
+	private SimpleVector dirStart;
+	
+	public InputMapper(Player player, KeyMapper keyMap, MouseMapper mouseMap, Logger logger, GameConfig game_config) {
 		// TODO Auto-generated constructor stub
+		this.setPlayer(player);
+		this.mouseMap = mouseMap;
 		this.keyMap = keyMap;
-		this.camera = camera;
+		this.camera = player.getCamera();
 		this.logger = logger;
+		this.setDirStart(camera.getDirection());
+		this.setUpStart(camera.getUpVector());
 	}
 
 	public void update() {
@@ -67,13 +82,11 @@ public class InputMapper {
 			if (state.getKeyCode() == KeyEvent.VK_SPACE
 					&& state.getState() == KeyState.PRESSED) {
 				up = state.getState();
-				logger.log("key pressed: space "
-						+ camera.getPosition().toString());
+				logger.log("key pressed: space "+ camera.getPosition().toString());
 			} else if (state.getKeyCode() == KeyEvent.VK_SPACE
 					&& state.getState() == KeyState.RELEASED) {
 				up = false;
-				logger.log("key released: space "
-						+ camera.getPosition().toString());
+				logger.log("key released: space "+ camera.getPosition().toString());
 			}
 			if (state.getKeyCode() == KeyEvent.VK_Z
 					&& state.getState() == KeyState.PRESSED) {
@@ -105,13 +118,38 @@ public class InputMapper {
 			if (state.getKeyCode() == KeyEvent.VK_SHIFT
 					&& state.getState() == KeyState.PRESSED) {
 				sprint = state.getState();
-				logger.log("key pressed: shift "
-						+ camera.getPosition().toString());
+				logger.log("key pressed: shift "+ camera.getPosition().toString());
 			} else if (state.getKeyCode() == KeyEvent.VK_SHIFT
 					&& state.getState() == KeyState.RELEASED) {
 				sprint = false;
-				logger.log("key released: shift "
-						+ camera.getPosition().toString());
+				logger.log("key released: shift "+ camera.getPosition().toString());
+			}
+			if (state.getKeyCode() == KeyEvent.VK_Q
+					&& state.getState() == KeyState.PRESSED) {
+				rotateCCW = state.getState();
+				logger.log("key pressed: Q "+ camera.getPosition().toString());
+			} else if (state.getKeyCode() == KeyEvent.VK_Q
+					&& state.getState() == KeyState.RELEASED) {
+				rotateCCW = false;
+				logger.log("key released: Q "+ camera.getPosition().toString());
+			}
+			if (state.getKeyCode() == KeyEvent.VK_E
+					&& state.getState() == KeyState.PRESSED) {
+				rotateCW = state.getState();
+				logger.log("key pressed: E "+ camera.getPosition().toString());
+			} else if (state.getKeyCode() == KeyEvent.VK_E
+					&& state.getState() == KeyState.RELEASED) {
+				rotateCW = false;
+				logger.log("key released: E "+ camera.getPosition().toString());
+			}
+			if (state.getKeyCode() == KeyEvent.VK_R
+					&& state.getState() == KeyState.PRESSED) {
+				upReset = state.getState();
+				logger.log("key pressed: R "+ camera.getPosition().toString());
+			} else if (state.getKeyCode() == KeyEvent.VK_R
+					&& state.getState() == KeyState.RELEASED) {
+				upReset = false;
+				logger.log("key released: R "+ camera.getPosition().toString());
 			}
 
 			// lock in camera
@@ -127,6 +165,9 @@ public class InputMapper {
 	}
 
 	public void updatePosition() {
+		SimpleVector line = new SimpleVector(mouseMap.getMouseDX(), 0, mouseMap.getMouseDY());
+		Matrix m = line.normalize().getRotationMatrix();
+		
 		if (sprint)
 			camSpeed = 1;
 		else
@@ -144,11 +185,66 @@ public class InputMapper {
 			camera.moveCamera(Camera.CAMERA_MOVEIN, camSpeed);
 		if (back)
 			camera.moveCamera(Camera.CAMERA_MOVEOUT, camSpeed);
+		if (rotateCCW) {
+			m.rotateAxis(m.getXAxis(), (float) 0.01);
+			camera.rotateAxis(m.invert3x3().getXAxis(), (float) -0.01);
+		}
+		if (rotateCW) {
+			m.rotateAxis(m.getXAxis(), (float) -0.01);
+			camera.rotateAxis(m.invert3x3().getXAxis(), (float) 0.01);
+		}
+		if (upReset) {
+//			camera.setOrientation(this.getDirStart(), this.getUpStart());
+//			camera.setOrientation(camera.getSideVector(), camera.getUpVector());
+			camera.lookAt(line);
+			mouseMap.setMouseDX(0);
+			mouseMap.setMouseDY(0);
+		}
 	}
 	
 	private void gameShutdown() {
 		keyMap.destroy();
 		AL.destroy();
 		System.exit(0);
+	}
+
+	public Player getPlayer() {
+		return player;
+	}
+
+	public void setPlayer(Player player) {
+		this.player = player;
+	}
+	
+	public KeyMapper getKeyMap() {
+		return keyMap;
+	}
+
+	public void setKeyMap(KeyMapper keyMap) {
+		this.keyMap = keyMap;
+	}
+
+	public Logger getLogger() {
+		return logger;
+	}
+
+	public void setLogger(Logger logger) {
+		this.logger = logger;
+	}
+
+	public SimpleVector getUpStart() {
+		return upStart;
+	}
+
+	public void setUpStart(SimpleVector upStart) {
+		this.upStart = upStart;
+	}
+
+	public SimpleVector getDirStart() {
+		return dirStart;
+	}
+
+	public void setDirStart(SimpleVector dirStart) {
+		this.dirStart = dirStart;
 	}
 }

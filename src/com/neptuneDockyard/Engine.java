@@ -3,7 +3,7 @@
  */
 package com.neptuneDockyard;
 
-import java.awt.event.KeyEvent;
+import java.awt.Color;
 
 import org.lwjgl.input.Mouse;
 import org.lwjgl.openal.AL;
@@ -13,9 +13,6 @@ import org.newdawn.slick.openal.SoundStore;
 import org.newdawn.slick.util.ResourceLoader;
 
 import com.threed.jpct.Camera;
-import com.threed.jpct.CollisionEvent;
-import com.threed.jpct.CollisionListener;
-import com.threed.jpct.Config;
 import com.threed.jpct.FrameBuffer;
 import com.threed.jpct.IRenderer;
 import com.threed.jpct.Lights;
@@ -25,7 +22,6 @@ import com.threed.jpct.Matrix;
 import com.threed.jpct.Mesh;
 import com.threed.jpct.Object3D;
 import com.threed.jpct.Primitives;
-import com.threed.jpct.Projector;
 import com.threed.jpct.SimpleVector;
 import com.threed.jpct.Texture;
 import com.threed.jpct.TextureManager;
@@ -33,7 +29,6 @@ import com.threed.jpct.World;
 import com.threed.jpct.util.KeyMapper;
 import com.threed.jpct.util.KeyState;
 import com.threed.jpct.util.Light;
-import com.threed.jpct.util.ShadowHelper;
 import com.threed.jpct.util.SkyBox;
 
 public class Engine {
@@ -49,27 +44,16 @@ public class Engine {
 
 	// private controllers
 
-	private Chunk chunkCon = null;
-
-	private boolean fullscreen = false;
-	private boolean openGL = false;
-	private boolean wireframe = false;
+	private Player player = null;
+	private ScreenLog screenLog = null;
 
 	// JPCT variables
-
-	private Object3D playerShip = null;
-	private Object3D truck = null;
-	private Object3D btr = null;
-	private Object3D mi24 = null;
-	private Object3D mi8 = null;
-	private Object3D car = null;
 
 	private FrameBuffer buffer = null;
 	private World theWorld = null;
 	private TextureManager texMan = null;
 	private Camera camera = null;
 	private SkyBox skyBox = null;
-	private Object3D skyDome = null;
 	
 	// game configuration
 	
@@ -77,44 +61,21 @@ public class Engine {
 	
 	// collision listeners
 	
-	private CollisionListener planetListener = null;
-
-	// TODO remove test object
-	private Object3D testPlane = null;
-	private Projector projector = null;
-	private ShadowHelper sh = null;
+	private Object3D firstPlanet;
 	private Light testLight = null;
 
 	// textures
 
-	private Texture[] textures[] = null;
-
 	// player location
 
 	private Matrix playerDirection = new Matrix();
-	private SimpleVector tempVector = new SimpleVector();
-
-	// framebuffer size
-
-	private int width = 1366;
-	private int height = 768;
-
-	// key flags
-
-	private boolean left = false;
-	private boolean right = false;
-	private boolean up = false;
-	private boolean down = false;
-	private boolean forward = false;
-	private boolean back = false;
-	private boolean zoomLock = false;
-	private boolean sprint = false;
-	private float camSpeed = (float) 0.1;
 
 	// audio and music
 
 	private Audio oggStream = null;
 
+	// methods
+	
 	public void logging_init() {
 		Logger.setLogLevel(Logger.LL_VERBOSE);
 		Logger.log("Log level set: " + Integer.toString(Logger.getLogLevel()));
@@ -130,25 +91,13 @@ public class Engine {
 
 		theWorld = new World();
 		texMan = TextureManager.getInstance();
-
-		// set up config
-
-		Config.glVerbose = true;
-		Config.glAvoidTextureCopies = true;
-		Config.maxPolysVisible = 1000;
-		Config.glColorDepth = 32;
-		Config.glFullscreen = true;
-		Config.farPlane = 4000;
-		Config.glShadowZBias = 0.8f;
-		Config.lightMul = 1;
-		Config.collideOffset = 500;
-		Config.glTrilinear = true;
-		Config.glWindowName = "Mosquito JPCT";
 		
 		// set up game configuration
 		
 		gameConfig = new GameConfig();
-		gameConfig.set_fly(true);
+		gameConfig.setFly(true);
+		gameConfig.setPlayMusic(false);
+		gameConfig.setFullscreen(true);
 
 		// set up mouse
 
@@ -156,25 +105,22 @@ public class Engine {
 
 		// set up lighting
 
-		Config.fadeoutLight = true;
-		Config.linearDiv = 100;
-		Config.lightDiscardDistance = 35;
-		theWorld.getLights().setOverbrightLighting(
-				Lights.OVERBRIGHT_LIGHTING_DISABLED);
+		theWorld.getLights().setOverbrightLighting(Lights.OVERBRIGHT_LIGHTING_ENABLED);
 		theWorld.getLights().setRGBScale(Lights.RGB_SCALE_2X);
 		testLight = new Light(theWorld);
-		testLight.setPosition(new SimpleVector(10, 10, 10));
-		testLight.setIntensity(140, 120, 120);
+		testLight.setPosition(new SimpleVector(100, 1, 0));
+		testLight.setIntensity(0, 255, 255);
 		testLight.setAttenuation(-1);
 		
 
 		// place light sources
 
 		theWorld.addLight(new SimpleVector(100, 100, 100), 5, 10, 15);
+		theWorld.addLight(testLight.getPosition(), Color.white);
 
 		// add fog
 
-		theWorld.setFogging(World.FOGGING_ENABLED);
+		theWorld.setFogging(World.FOGGING_DISABLED);
 		theWorld.setFoggingMode(World.FOGGING_PER_PIXEL);
 		theWorld.setFogParameters(400, 30, 30, 30);
 
@@ -182,13 +128,9 @@ public class Engine {
 
 		try {
 			Logger.log("loading textures");
-			Texture starTex = null;
 			TextureManager.getInstance().addTexture("starTex", new Texture("assets/textures/stars.jpg"));
-			Texture fighterTex = null;
 			TextureManager.getInstance().addTexture("fighterTex", new Texture("assets/textures/fighter-tex.jpg"));
-			Texture sandTex = null;
 			TextureManager.getInstance().addTexture("sandTex", new Texture("assets/textures/sf-01.jpg"));
-			Texture truckTex = null;
 			TextureManager.getInstance().addTexture("truckTex", new Texture("assets/textures/veh_kama.png"));
 			Logger.log("finished loading textures");
 		} catch (Exception ex) {
@@ -201,93 +143,34 @@ public class Engine {
 		try {
 			// load player model
 			Logger.log("loading player model");
-			playerShip = Loader.load3DS("assets/models/player/fighter.3ds",
-					0.1f)[0];
-			playerShip.rotateX((float) -Math.PI / 4f);
-			playerShip.rotateMesh();
-
-			playerShip.setTexture("fighterTex");
-			// playerShip.setEnvmapped(Object3D.ENVMAP_ENABLED); //this causes texture to get all messed up
-			playerShip.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS);
-			playerShip.enableCollisionListeners();
-			playerShip.calcNormals();
-			playerShip.build();
-			playerShip.compile();
-			playerShip.setName("playerShip");
-			theWorld.addObject(playerShip);
 			
 			Logger.log("loading NPC models");
-			truck = Loader.load3DS("assets/models/vehicles/truck.3ds", 10f)[0];
-			truck.setTexture("truckTex");
-//			truck.setEnvmapped(Object3D.ENVMAP_ENABLED);
-			truck.rotateX((float) (-Math.PI / 1f));
-			truck.translate(0, 50f, 0);
-			truck.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS);
-			truck.enableCollisionListeners();
-			truck.calcNormals();
-			truck.calcBoundingBox();
-			truck.build();
-			truck.compile();
-			truck.setName("truck");
-			theWorld.addObject(truck);
 			
-			// TODO add c130
-			btr = Loader.loadOBJ("assets/models/tanks/BTR70.obj", null, 1f)[0];
-//			btr.setTexture("ac130Tex");
-			btr.translate(200f, 0, 0);
-			btr.rotateX((float) (-Math.PI / 1f));
-			btr.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS);
-			btr.enableCollisionListeners();
-			btr.calcNormals();
-			btr.calcBoundingBox();
-			btr.build();
-			btr.compile();
-			btr.setName("ac130");
-//			theWorld.addObject(btr);
-			
-			// TODO add trucks
-
 			// TODO load surface
-//			testPlane = Primitives.getPlane(32, 32);
-			testPlane = Primitives.getSphere(64, 70);
-//			testPlane = Primitives.getCube(70);
-			testPlane.rotateX((float) (Math.PI / 2f));
-			testPlane.setSpecularLighting(true);
-			testPlane.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS);
-			testPlane.enableCollisionListeners();
-			testPlane.setCollisionOptimization(true);
-			testPlane.setTexture("sandTex");
-			testPlane.compileAndStrip();
+			firstPlanet = Primitives.getSphere(32, 200);
+			firstPlanet.rotateX((float) (Math.PI / 2f));
+			firstPlanet.setSpecularLighting(true);
+			firstPlanet.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS);
+			firstPlanet.enableCollisionListeners();
+			firstPlanet.setCollisionOptimization(true);
+			firstPlanet.setTexture("sandTex");
+			firstPlanet.compileAndStrip();
 			
-			Mesh planeMesh = testPlane.getMesh();
+			Mesh planeMesh = firstPlanet.getMesh();
 			planeMesh.setVertexController(new Mod(), false);
 			planeMesh.applyVertexController();
 			planeMesh.removeVertexController();
 			
-			testPlane.translate(100, 100, 100);
-//			testPlane.translate(0, 100, 0);
-			testPlane.setName("testPlane");
-			theWorld.addObject(testPlane);
-//			testPlane.addCollisionListener(planetListener);
+			firstPlanet.translate(100, 100, 100);
+			firstPlanet.setName("firstPlanet");
+			theWorld.addObject(firstPlanet);
 
 			// load shadows and projector
-			//TODO throws errors
-			projector = new Projector();
-			projector.setFOV(1.5f);
-			projector.setYFOV(1.5f);
-			sh = new ShadowHelper(theWorld, buffer, projector, 2048);
-			sh.setCullingMode(false);
-//			 sh.setAmbientLight(new Color(30, 30, 30));
-			sh.setLightMode(true);
-			sh.setBorder(1);
-			sh.addCaster(testPlane);
-			sh.addReceiver(playerShip);
 
 			Loader.clearCache();
 			Logger.log("finished loading models");
 		} catch (Exception ex) {
-			// TODO fix loader error, check if model loaded instead of the try
-			// catch method
+			// TODO fix loader error, check if model loaded instead of the try catch method
 			Logger.log("error: models not loaded");
 			Logger.log(ex.getMessage());
 		}
@@ -304,22 +187,18 @@ public class Engine {
 		}
 
 		// add skybox
-		// TODO figure out skybox issue
-		skyBox = new SkyBox(/*"starTex", "starTex", "starTex", "starTex", "starTex", "starTex",*/ 1000f);
+		skyBox = new SkyBox(1000f);
 		skyBox.compile();
 
 		// add camera
-
 		Logger.log("adding camera, setting position");
 		camera = theWorld.getCamera();
 		camera.setFOV(60);
 		camera.setPosition(50, -50, -5);
-		camera.lookAt(playerShip.getTransformedCenter());
 
 		// add buffer
-
 		Logger.log("adding framebuffer");
-		buffer = new FrameBuffer(width, height, FrameBuffer.SAMPLINGMODE_NORMAL);
+		buffer = new FrameBuffer(gameConfig.getWidth(), gameConfig.getHeight(), FrameBuffer.SAMPLINGMODE_NORMAL);
 		buffer.disableRenderer(IRenderer.RENDERER_SOFTWARE);
 		buffer.enableRenderer(IRenderer.RENDERER_OPENGL);
 		
@@ -331,15 +210,17 @@ public class Engine {
 		Logger.log("Engine init");
 
 		gameConfig = new GameConfig();
+		player = new Player(camera);
 		keyMap = new KeyMapper();
-		mouseMap = new MouseMapper(camera, playerShip);
-		inMap = new InputMapper(keyMap, camera, logger, gameConfig);
+		mouseMap = new MouseMapper(camera);
+		inMap = new InputMapper(player, keyMap, mouseMap, logger, gameConfig);
+		screenLog = new ScreenLog(buffer);
 	}
 
 	public void run() {
 		Logger.log("Engine running");
 
-		oggStream.playAsMusic(1.0f, 1.0f, true);
+		if(gameConfig.isPlayMusic()) oggStream.playAsMusic(1.0f, 1.0f, true);
 		gameLoop();
 	}
 
@@ -347,12 +228,9 @@ public class Engine {
 		SoundStore.get().poll(0);
 
 		mouseMap.cameraUpdate();
-//		updatePosition();
-		getCollisions();
-
 		inMap.update();
 		inMap.updatePosition();
-
+		screenLog.update();
 	}
 
 	public void gameLoop() {
@@ -384,51 +262,5 @@ public class Engine {
 		keyMap.destroy();
 		AL.destroy();
 		System.exit(0);
-	}
-
-	public void updatePosition() {
-		if (sprint)
-			camSpeed = 1;
-		else
-			camSpeed = (float) 0.1;
-
-		if (left)
-			camera.moveCamera(Camera.CAMERA_MOVELEFT, camSpeed);
-		if (right)
-			camera.moveCamera(Camera.CAMERA_MOVERIGHT, camSpeed);
-		if (up)
-			camera.moveCamera(Camera.CAMERA_MOVEUP, camSpeed);
-		if (down)
-			camera.moveCamera(Camera.CAMERA_MOVEDOWN, camSpeed);
-		if (forward)
-			camera.moveCamera(Camera.CAMERA_MOVEIN, camSpeed);
-		if (back)
-			camera.moveCamera(Camera.CAMERA_MOVEOUT, camSpeed);
-		
-		//check camera collisions, this makes the camera fall
-//		if(!ufo)
-//			theWorld.checkCameraCollisionEllipsoid(testPlane.getTransformedCenter().normalize(), new SimpleVector(1,1,5), 2, 1);
-//			if (theWorld.checkCameraCollisionEllipsoid(testPlane.getTransformedCenter().normalize(), new SimpleVector(1,1,5), 1, 1)) {
-//				CollisionEvent ce = null;
-//				Object3D ob = ce.getObject();
-//				planetListener.collision(ce);
-//				camera.align(ce.getSource());
-//			}
-//			theWorld.checkCameraCollisionEllipsoid(new SimpleVector(0,1,0), new SimpleVector(1,1,5), 2, 1);
-	}
-
-	public void getCollisions() {
-		// TODO get collisions here and put it in the update loop, if collided,
-		// disable directional movement
-		
-		//apply gravity
-		SimpleVector t = new SimpleVector(0,0,0);
-		SimpleVector s = new SimpleVector(0,0,0);
-		t = testPlane.getTransformedCenter().normalize();
-		s = testPlane.getTransformedCenter().normalize();
-//		t = theWorld.getObjectByName("playerShip").checkForCollisionEllipsoid(t, testPlane.getTransformedCenter().normalize(), 1);
-//		theWorld.getObjectByName("playerShip").translate(t);
-//		s = theWorld.getObjectByName("truck").checkForCollisionEllipsoid(s, testPlane.getTransformedCenter().normalize(), 1);
-//		theWorld.getObjectByName("truck").translate(s);
 	}
 }
