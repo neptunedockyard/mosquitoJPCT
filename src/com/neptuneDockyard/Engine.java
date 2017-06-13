@@ -41,12 +41,13 @@ public class Engine {
 	private KeyMapper keyMap = null;
 	private MouseMapper mouseMap = null;
 	private KeyState state = null;
-	private InputMapper inMap = null;
+	private InputMapper inputMap = null;
 
 	// private controllers
 
 	private Player player = null;
 	private ScreenLog screenLog = null;
+	private PlanetLoader planets = null;
 
 	// JPCT variables
 
@@ -62,7 +63,6 @@ public class Engine {
 	
 	// collision listeners
 	
-	private Object3D firstPlanet;
 	private Light testLight = null;
 
 	// textures
@@ -108,24 +108,24 @@ public class Engine {
 
 		// set up lighting
 
-		theWorld.getLights().setOverbrightLighting(Lights.OVERBRIGHT_LIGHTING_ENABLED);
+		theWorld.getLights().setOverbrightLighting(Lights.OVERBRIGHT_LIGHTING_DISABLED);
 		theWorld.getLights().setRGBScale(Lights.RGB_SCALE_2X);
 		testLight = new Light(theWorld);
-		testLight.setPosition(new SimpleVector(150, 150, 0));
-		testLight.setIntensity(0, 255, 255);
-		testLight.setAttenuation(-1);
+		testLight.setPosition(new SimpleVector(0, 0, 0));
+		testLight.setIntensity(25, 25, 25);
+		testLight.setAttenuation(0);
 		
 
 		// place light sources
 
-		theWorld.addLight(new SimpleVector(100, 100, 100), 5, 10, 15);
 		theWorld.addLight(testLight.getPosition(), Color.white);
 
 		// add fog
 
 		theWorld.setFogging(World.FOGGING_DISABLED);
+//		theWorld.setFogging(World.FOGGING_ENABLED);
 		theWorld.setFoggingMode(World.FOGGING_PER_PIXEL);
-		theWorld.setFogParameters(400, 30, 30, 30);
+		theWorld.setFogParameters(500, 10, 0, 0);
 
 		// add textures
 
@@ -149,24 +149,10 @@ public class Engine {
 			
 			Logger.log("loading NPC models");
 			
-			// TODO load surface
-			firstPlanet = Primitives.getSphere(32, 200);
-			firstPlanet.rotateX((float) (Math.PI / 2f));
-			firstPlanet.setSpecularLighting(true);
-			firstPlanet.setCollisionMode(Object3D.COLLISION_CHECK_OTHERS);
-			firstPlanet.enableCollisionListeners();
-			firstPlanet.setCollisionOptimization(true);
-			firstPlanet.setTexture("sandTex");
-			firstPlanet.compileAndStrip();
-			
-			Mesh planeMesh = firstPlanet.getMesh();
-			planeMesh.setVertexController(new Mod(), false);
-			planeMesh.applyVertexController();
-			planeMesh.removeVertexController();
-			
-			firstPlanet.translate(100, 100, 100);
-			firstPlanet.setName("firstPlanet");
-			theWorld.addObject(firstPlanet);
+			planets = new PlanetLoader(5);
+			planets.generate();
+			planets.place(500);
+			theWorld.addObjects(planets.getUniverse());
 
 			// load shadows and projector
 
@@ -190,14 +176,15 @@ public class Engine {
 		}
 
 		// add skybox
-		skyBox = new SkyBox(1000f);
+//		skyBox = new SkyBox(1000f);
+		skyBox = new SkyBox("starTex", "starTex", "starTex", "starTex", "starTex", "starTex", 1000f);
 		skyBox.compile();
 
 		// add camera
 		Logger.log("adding camera, setting position");
 		camera = theWorld.getCamera();
 		camera.setFOV(60);
-		camera.setPosition(50, -50, -5);
+		camera.setPosition(0, 0, 0);
 
 		// add buffer
 		Logger.log("adding framebuffer");
@@ -216,7 +203,7 @@ public class Engine {
 		player = new Player(camera);
 		keyMap = new KeyMapper();
 		mouseMap = new MouseMapper(camera);
-		inMap = new InputMapper(player, keyMap, mouseMap, logger, gameConfig);
+		inputMap = new InputMapper(player, keyMap, mouseMap, logger, gameConfig);
 		screenLog = new ScreenLog(buffer);
 	}
 
@@ -231,8 +218,8 @@ public class Engine {
 		SoundStore.get().poll(0);
 
 		mouseMap.cameraUpdate();
-		inMap.update();
-		inMap.updatePosition();
+		inputMap.update();
+		inputMap.updatePosition();
 		screenLog.update();
 	}
 

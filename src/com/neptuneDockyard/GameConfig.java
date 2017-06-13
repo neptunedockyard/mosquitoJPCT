@@ -24,7 +24,7 @@ public class GameConfig {
 		Config.maxPolysVisible = 1000;
 		Config.glColorDepth = 32;
 		Config.glFullscreen = fullscreen;
-		Config.farPlane = 4000;
+		Config.farPlane = 8000;
 		Config.glShadowZBias = 0.8f;
 		Config.lightMul = 1;
 		Config.collideOffset = 500;

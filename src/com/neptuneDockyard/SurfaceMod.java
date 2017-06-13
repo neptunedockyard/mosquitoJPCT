@@ -3,14 +3,20 @@ package com.neptuneDockyard;
 import java.util.Random;
 
 import com.threed.jpct.GenericVertexController;
+import com.threed.jpct.Logger;
 import com.threed.jpct.SimpleVector;
 
-public class Mod extends GenericVertexController {
+public class SurfaceMod extends GenericVertexController {
 
 	private static final long serialVersionUID = 1L;
-	private static final int noiseMult = 5;
+	private static int noiseMult = 3;
 	private static final int max = 1;
 	private static final int min = -1;
+
+	public void setNoise(int planetSize) {
+		// TODO Auto-generated constructor stub
+		this.noiseMult = planetSize % this.noiseMult;
+	}
 
 	public void apply() {
 		// TODO Auto-generated method stub
@@ -21,6 +27,7 @@ public class Mod extends GenericVertexController {
 			d[i].y = s[i].y	+ (float) SimplexNoise.noise(s[i].x, s[i].y, s[i].z)* randomOp();
 			d[i].x = s[i].x	+ (float) SimplexNoise.noise(s[i].x, s[i].y, s[i].z)* randomOp();
 		}
+		Logger.log("Planet surface modder applied");
 	}
 	
 	private float randomOp() {
