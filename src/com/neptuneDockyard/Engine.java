@@ -48,6 +48,7 @@ public class Engine {
 	private Player player = null;
 	private ScreenLog screenLog = null;
 	private PlanetLoader planets = null;
+	private TexLoader textures = null;
 
 	// JPCT variables
 
@@ -112,8 +113,8 @@ public class Engine {
 		theWorld.getLights().setRGBScale(Lights.RGB_SCALE_2X);
 		testLight = new Light(theWorld);
 		testLight.setPosition(new SimpleVector(0, 0, 0));
-		testLight.setIntensity(25, 25, 25);
-		testLight.setAttenuation(0);
+		testLight.setIntensity(0.1f, 0.1f, 0.1f);
+		testLight.setAttenuation(1f);
 		
 
 		// place light sources
@@ -129,18 +130,10 @@ public class Engine {
 
 		// add textures
 
-		try {
-			Logger.log("loading textures");
-			TextureManager.getInstance().addTexture("starTex", new Texture("assets/textures/stars.jpg"));
-			TextureManager.getInstance().addTexture("fighterTex", new Texture("assets/textures/fighter-tex.jpg"));
-			TextureManager.getInstance().addTexture("sandTex", new Texture("assets/textures/sf-01.jpg"));
-			TextureManager.getInstance().addTexture("truckTex", new Texture("assets/textures/veh_kama.png"));
-			Logger.log("finished loading textures");
-		} catch (Exception ex) {
-			Logger.log("error: textures not loaded");
-			Logger.log(ex.getMessage());
-		}
-
+		textures = new TexLoader();
+		textures.getList();
+		textures.load();
+		
 		// add model
 
 		try {
@@ -149,6 +142,7 @@ public class Engine {
 			
 			Logger.log("loading NPC models");
 			
+			Logger.log("loading environment");
 			planets = new PlanetLoader(5);
 			planets.generate();
 			planets.place(500);
@@ -183,8 +177,8 @@ public class Engine {
 		// add camera
 		Logger.log("adding camera, setting position");
 		camera = theWorld.getCamera();
-		camera.setFOV(60);
-		camera.setPosition(0, 0, 0);
+//		camera.setFOV(60);
+//		camera.setPosition(0, 0, 0);
 
 		// add buffer
 		Logger.log("adding framebuffer");
@@ -205,6 +199,9 @@ public class Engine {
 		mouseMap = new MouseMapper(camera);
 		inputMap = new InputMapper(player, keyMap, mouseMap, logger, gameConfig);
 		screenLog = new ScreenLog(buffer);
+		
+		player.setCameraPosition(new SimpleVector(0, 0, 0));
+		player.setFov(60);
 	}
 
 	public void run() {

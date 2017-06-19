@@ -30,8 +30,8 @@ public class GameConfig {
 		Config.collideOffset = 500;
 		Config.glTrilinear = true;
 		Config.glWindowName = "Mosquito JPCT";
-		Config.fadeoutLight = false;
-		Config.linearDiv = 100;
+		Config.fadeoutLight = true;
+		Config.linearDiv = 50;
 		Config.lightDiscardDistance = -1;
 	}
 

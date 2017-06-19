@@ -32,7 +32,10 @@ public class PlanetLoader {
 			universe[i].enableCollisionListeners();
 			universe[i].setCollisionOptimization(true);
 			universe[i].setTexture("sandTex");
-			universe[i].compileAndStrip();
+			universe[i].calcNormals();
+			universe[i].calcBoundingBox();
+			universe[i].calcTextureWrapSpherical();
+//			universe[i].compileAndStrip();
 			
 			this.modifySurface(universe[i]);
 			

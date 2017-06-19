@@ -22,6 +22,7 @@ public class SurfaceMod extends GenericVertexController {
 		// TODO Auto-generated method stub
 		SimpleVector[] s = getSourceMesh();
 		SimpleVector[] d = getDestinationMesh();
+		this.noiseMult = randomBetween(1,4);
 		for (int i = 0; i < s.length; i++) {
 			d[i].z = s[i].z	+ (float) SimplexNoise.noise(s[i].x, s[i].y, s[i].z)* randomOp();
 			d[i].y = s[i].y	+ (float) SimplexNoise.noise(s[i].x, s[i].y, s[i].z)* randomOp();
@@ -32,11 +33,16 @@ public class SurfaceMod extends GenericVertexController {
 	
 	private float randomOp() {
 		Random rn = new Random();
-		return randomBetween(noiseMult)*(rn.nextInt((max+1) - min) + min);
+		return noiseMult*(rn.nextInt((max+1) - min) + min);
 	}
 	
 	private float randomBetween(int noise) {
 		Random rn = new Random();
 		return rn.nextFloat()*((noise+1) + noise) - noise;
+	}
+	
+	private int randomBetween(int min, int max) {
+		Random rn = new Random();
+		return rn.nextInt((max+1) - min) + min;
 	}
 }
