@@ -49,6 +49,7 @@ public class Engine {
 	private ScreenLog screenLog = null;
 	private PlanetLoader planets = null;
 	private TexLoader textures = null;
+	private CubeLoader tiles = null;
 
 	// JPCT variables
 
@@ -147,6 +148,12 @@ public class Engine {
 			planets.generate();
 			planets.place(500);
 			theWorld.addObjects(planets.getUniverse());
+			
+			tiles = new CubeLoader(10f);
+			tiles.loadCube(new SimpleVector(1,1,1), "fighterTex");
+			tiles.setTexture(0, "sandTex");
+			theWorld.addObject(tiles.getCube(0));
+			
 
 			// load shadows and projector
 
