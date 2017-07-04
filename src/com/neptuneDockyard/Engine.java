@@ -177,8 +177,8 @@ public class Engine {
 		}
 
 		// add skybox
-//		skyBox = new SkyBox(1000f);
-		skyBox = new SkyBox("starTex", "starTex", "starTex", "starTex", "starTex", "starTex", 1000f);
+//		skyBox = new SkyBox(gameConfig.worldSize);
+		skyBox = new SkyBox("starTex", "starTex", "starTex", "starTex", "starTex", "starTex", gameConfig.worldSize);
 		skyBox.compile();
 
 		// add camera

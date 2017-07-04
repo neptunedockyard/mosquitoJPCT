@@ -13,6 +13,7 @@ public class GameConfig {
 	private boolean wireframe;
 	private int width = 1366;
 	private int height = 768;
+	public float worldSize = 10000f;
 	
 	public GameConfig() {
 		Logger.log("Initializing game configuration");
@@ -24,7 +25,7 @@ public class GameConfig {
 		Config.maxPolysVisible = 1000;
 		Config.glColorDepth = 32;
 		Config.glFullscreen = fullscreen;
-		Config.farPlane = 8000;
+		Config.farPlane = this.worldSize;
 		Config.glShadowZBias = 0.8f;
 		Config.lightMul = 1;
 		Config.collideOffset = 500;

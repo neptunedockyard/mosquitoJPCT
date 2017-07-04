@@ -169,7 +169,7 @@ public class InputMapper {
 		Matrix m = line.normalize().getRotationMatrix();
 		
 		if (sprint)
-			camSpeed = 1;
+			camSpeed = 10;
 		else
 			camSpeed = (float) 0.1;
 
