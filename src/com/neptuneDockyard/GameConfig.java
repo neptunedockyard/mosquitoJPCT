@@ -22,7 +22,7 @@ public class GameConfig {
 
 		Config.glVerbose = true;
 		Config.glAvoidTextureCopies = true;
-		Config.maxPolysVisible = 1000;
+		Config.maxPolysVisible = 32;
 		Config.glColorDepth = 32;
 		Config.glFullscreen = fullscreen;
 		Config.farPlane = this.worldSize;
